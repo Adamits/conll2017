@@ -1,2 +1,5 @@
 .idea/*
 *.pyc
+/models/
+/encdec_models/
+/encdec_results/
