@@ -23,5 +23,5 @@ if __name__ == '__main__':
     data_sets.append(open("%s.%u.sys" % (argv[1], i)).read().split('\n'))
     data_sets[-1] = [wf for wf in data_sets[-1] if wf != '']
 
-  for i in range(900, 1000):
+  for i in range(499, 1000):
     print(vote(i, data_sets, N))

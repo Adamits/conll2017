@@ -39,8 +39,8 @@ if __name__=='__main__':
     dev_lines = codecs.open(argv[2], 'r', 'utf-8')
     dev_data = [line.strip().split("\t") for line in dev_lines]
 
-    tuning_data = dev_data[:900]
-    gold_data = dev_data[900:]
+    tuning_data = dev_data[:499]
+    gold_data = dev_data[499:]
     # For storing optimal weights through all iterations
     # pi / 1 - pi AKA dev_acc / (1 - dev_acc)
     weights = dd(lambda: 1 / N)
@@ -52,5 +52,7 @@ if __name__=='__main__':
         dev_acc = eval(tuning_data, [l.split("\t") for l in data_sets[i][:len(tuning_data)]]) / 100
         weights[i] = dev_acc / (1 - dev_acc)
 
-    for k in range(900, 1000):
+    for k in range(499, 1000):
         print(vote(k, data_sets, N, weights))
+
+    print(weights)

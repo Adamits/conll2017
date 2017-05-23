@@ -46,12 +46,12 @@ if __name__=='__main__':
     # Get gold data for eval
     dev_lines = codecs.open(argv[2], 'r', 'utf-8')
     dev_data = [line.strip().split("\t") for line in dev_lines]
-    tuning_data = dev_data[:901]
-    gold_data = dev_data[900:]
+    tuning_data = dev_data[:499]
+    gold_data = dev_data[499:]
     # For storing optimal weights through all iterations
     optimal_acc = 0
     # Just hardcode alphas for now
-    alphas = np.arange(0.01, 0.02, 0.001)
+    alphas = np.arange(0.01, 0.05, 0.001)
     # Test with each alpha value
     for alpha in alphas:
         weights = dd(lambda: 1 / N)
@@ -84,5 +84,7 @@ if __name__=='__main__':
             else:
                 weights = adjust_weights(alpha, last_weights, N)
 
-    for k in range(901, 1001):
+    for k in range(499, 1000):
         print(vote(k, data_sets, N, optimal_weights))
+
+    print(optimal_alpha, optimal_weights)
