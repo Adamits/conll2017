@@ -39,7 +39,6 @@ $(ENCDEC_RESULTS)/%-test.low.sys:$(ENCDEC_MODELS)/%-low.1.model
 
 	$(PYTHON) $(SCRIPTS)/vote.py $(ENCDEC_RESULTS)/$*-test.low > $(ENCDEC_RESULTS)/$*-test.low.sys
 
-
 $(ENCDEC_MODELS)/%-medium.1.model:$(DATADIR)/%-train-low $(DATADIR)/%-train-medium $(DATADIR)/%-train-high $(DATADIR)/%-dev $(DATADIR)/%-test
 	$(PYTHON) $(SCRIPTS)/attention_train.py $(DATADIR)/$*-train-medium $(DATADIR)/$*-dev 10 100 0.01 $(ENCDEC_MODELS)/$*-medium.1.model
 	$(PYTHON) $(SCRIPTS)/attention_train.py $(DATADIR)/$*-train-medium $(DATADIR)/$*-dev 10 100 0.01 $(ENCDEC_MODELS)/$*-medium.2.model

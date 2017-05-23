@@ -4,6 +4,7 @@ import random
 import pickle
 
 import dynet as dy
+from numpy import prod
 
 from augment import augment
 
@@ -107,6 +108,8 @@ def generate(in_seq, enc_fwd_lstm, enc_bwd_lstm, dec_lstm):
 
     out = ''
     count_EOS = 0
+    # For checking likelihood of entire output string
+    max_probs_list = []
     for i in range(len(in_seq)*2):
         if count_EOS == 2: break
         # w1dt can be computed and cached once for the entire decoding phase
@@ -115,6 +118,7 @@ def generate(in_seq, enc_fwd_lstm, enc_bwd_lstm, dec_lstm):
         s = s.add_input(vector)
         out_vector = w * s.output() + b
         probs = dy.softmax(out_vector).vec_value()
+        max_probs_list.append(max(probs))
         next_char = probs.index(max(probs))
         last_output_embeddings = output_lookup[next_char]
         if int2char[next_char] == EOS:
@@ -122,7 +126,8 @@ def generate(in_seq, enc_fwd_lstm, enc_bwd_lstm, dec_lstm):
             continue
 
         out += int2char[next_char]
-    return out
+
+    return out, prod(max_probs_list)
 
 
 def get_loss(input_sentence, output_sentence, enc_fwd_lstm, enc_bwd_lstm, dec_lstm):
@@ -132,7 +137,7 @@ def get_loss(input_sentence, output_sentence, enc_fwd_lstm, enc_bwd_lstm, dec_ls
     return decode(dec_lstm, encoded, output_sentence)
 
 
-def train(isentences,osentences, idevsentences,odevsentences, alpha):
+def train(isentences,osentences, idevsentences,odevsentences, alpha, model_fn):
     trainer = dy.SimpleSGDTrainer(model,e0=alpha)
     iopairs = list(zip(isentences,osentences))
     random.shuffle(iopairs)
@@ -146,18 +151,23 @@ def train(isentences,osentences, idevsentences,odevsentences, alpha):
             trainer.update()
 
         corr = 0
+        candidate_probs_matrix = []
         for ip,op in zip(idevsentences,odevsentences):
             dy.renew_cg()
-            sys_o = generate(ip, enc_fwd_lstm, enc_bwd_lstm, dec_lstm)
+            sys_o, probs = generate(ip, enc_fwd_lstm, enc_bwd_lstm, dec_lstm)
+            candidate_probs_matrix.append([sys_o, probs])
             if ''.join(op) == sys_o:
                 corr += 1
+        if i == EPOCHS - 1:
+            with open("model_probs/%s-probs" % model_fn, 'w') as out:
+                out.write('\n'.join(['\t'.join([str(x[0]), str(x[1])]) for x in candidate_probs_matrix]))
         print("EPOCH %u: LOSS %.2f, DEV ACC %.2f" % (i+1, loss_value/len(iopairs), corr * 100.0 / len(idevsentences)))
 
     
 def test(itestsentences, ofile):
     for ilemma,ilabels in itestsentences:
         dy.renew_cg()
-        sys_o = generate(ilemma+ilabels, enc_fwd_lstm, enc_bwd_lstm, dec_lstm)
+        sys_o, probs = generate(ilemma+ilabels, enc_fwd_lstm, enc_bwd_lstm, dec_lstm)
         ofile.write("%s\t%s\t%s\n" % (''.join(ilemma),sys_o,';'.join(ilabels)))
 
 def init_models(chars, fn=None):

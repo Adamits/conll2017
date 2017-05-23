@@ -2,6 +2,7 @@ from __future__ import print_function
 from sys import argv, stderr
 import random
 import pickle
+import codecs
 
 import dynet as dy
 
@@ -21,11 +22,11 @@ if __name__=='__main__':
     ALPHA=float(argv[5])
     O_FN = argv[6]
 
-    data = augment([l.strip().split('\t') for l in open(TRAIN_FN).read().split('\n') if l.strip() != ''],AUG_FACTOR)
+    data = augment([l.strip().split('\t') for l in codecs.open(TRAIN_FN, 'r', "utf-8").read().split('\n') if l.strip() != ''],AUG_FACTOR)
     
     idata = [[c for c in lemma] + tags.split(';') for lemma, _, tags in data]
     odata = [[c for c in wf] for _, wf, _ in data]    
-    devdata = [l.strip().split('\t') for l in open(DEV_FN).read().split('\n') if l.strip() != '']
+    devdata = [l.strip().split('\t') for l in codecs.open(DEV_FN, 'r', "utf-8").read().split('\n') if l.strip() != '']
     idevdata = [[c for c in lemma] + tags.split(';') for lemma, _, tags in devdata]
     odevdata = [[c for c in wf] for _, wf, _ in devdata]
     
@@ -36,6 +37,6 @@ if __name__=='__main__':
             characters.add(c)
 
     attention.init_models(characters, None)
-    attention.train(idata,odata,idevdata,odevdata,ALPHA)
+    attention.train(idata,odata,idevdata,odevdata,ALPHA, O_FN)
     attention.save_model(O_FN)
 
