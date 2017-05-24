@@ -24,10 +24,17 @@ def vote(i,data,n, weights):
 
 def adjust_weights(alpha, weights, n):
     # randomly move weight alpha form one classifier to another
+    new_weights = copy(weights)
     from_i, to_i = random.sample(range(0, n), 2)
-    weights[from_i] -= alpha
-    weights[to_i] += alpha
-    return weights
+    new_weights[from_i] -= alpha
+    new_weights[to_i] += alpha
+
+    # Make sure the adjustment doesn't make a weight go negative
+    # If it does, recursively call function again
+    if sum(1 for w in new_weights.values() if w < 0.0) > 0:
+        return adjust_weights(alpha, weights, n)
+    else:
+        return new_weights
 
 if __name__=='__main__':
     if len(argv) < 3:
@@ -51,12 +58,13 @@ if __name__=='__main__':
     # For storing optimal weights through all iterations
     optimal_acc = 0
     # Just hardcode alphas for now
-    alphas = np.arange(0.01, 0.05, 0.001)
+    alphas = np.arange(0.01, 0.06, 0.01)
+    same = 0
     # Test with each alpha value
     for alpha in alphas:
         weights = dd(lambda: 1 / N)
         acc = 0
-        for i in range(1000):
+        for i in range(2000):
             last_acc = acc
 
             # Get guesses with current weights
@@ -65,6 +73,9 @@ if __name__=='__main__':
                 guesses.append(vote(j,data_sets,N, weights).split("\t"))
             # Update accuracy per weights
             acc = eval(tuning_data, guesses)
+
+            if acc == last_acc:
+                same += 1
 
             # Store global optima
             if acc > optimal_acc:
@@ -87,4 +98,4 @@ if __name__=='__main__':
     for k in range(499, 1000):
         print(vote(k, data_sets, N, optimal_weights))
 
-    print(optimal_alpha, optimal_weights)
+    print(same)
